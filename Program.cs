@@ -14,6 +14,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+List<string> cityNames = [
+    "London", "New York", "Tokyo", "Sydney", "Berlin", "Paris", "Moscow", "Beijing", "Cairo", "Rio de Janeiro"
+];
+
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -21,21 +25,37 @@ var summaries = new[]
 
 app.MapGet("/weatherforecast", () =>
 {
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
+    var forecast =  new WeatherForecast() {
+        Date = DateOnly.FromDateTime(DateTime.Now),
+        Cities = cityNames.Take(5).Select(cityName => new City
+        {
+            Name = cityName,
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = summaries[Random.Shared.Next(summaries.Length)]
+        }).ToList(),
+        CitiesMore = cityNames.Skip(5).Select(cityName => new City
+        {
+            Name = cityName,
+            TemperatureC = Random.Shared.Next(-20, 55),
+            Summary = summaries[Random.Shared.Next(summaries.Length)]
+        }).ToList()
+    };
     return forecast;
 })
 .WithName("GetWeatherForecast");
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+record City
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    public required string Name { get; init; }
+    public required int TemperatureC { get; init; }
+    public required string Summary { get; init; }
+}
+
+record WeatherForecast
+{
+    public DateOnly Date { get; init; }
+    public required List<City> Cities { get; init; }
+    public List<City>? CitiesMore { get; init; }
 }
